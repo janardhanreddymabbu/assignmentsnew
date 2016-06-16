@@ -1,0 +1,161 @@
+1.	How many copies of the book titled The Lost Tribe are owned by the library branch whose name is "Sharpstown"?
+Answer:
+
+SELECT noOfcopies FROM tbl_book_copies,tbl_library_branch, tbl_book
+where tbl_library_branch.branchId =tbl_book_copies.branchId
+and tbl_book_copies.bookId =tbl_book.bookId
+and tbl_library_branch.branchName ="Sharptown"
+and tbl_book.bookId ="The lost tribe";
+
+Using JOINS:
+
+Select noOfcopies 
+FROM tbl_book_copies 
+join tbl_library_branch on tbl_library_branch.branchId =tbl_book_copies.branchId
+join tbl_book on  tbl_book_copies.bookId =tbl_book.bookId
+where tbl_library_branch.branchName ="Sharptown"  
+and tbl_book.bookId ="The lost tribe";
+
+
+2.	How many copies of the book titled The Lost Tribe are owned by each library branch?
+Answer:
+
+Select tbl_library_branch.branchName,noOfcopies 
+FROM tbl_book_copies 
+join tbl_library_branch on tbl_library_branch.branchId =tbl_book_copies.branchId
+join tbl_book on  tbl_book_copies.bookId =tbl_book.bookId
+where tbl_book.bookId ="The lost tribe";
+
+
+3.	Retrieve the names of all borrowers who do not have any books checked out .
+Answer:
+select distinct name from tbl_borrower where cardNo not EXISTS  (select 1 from tbl_book_loans where tbl_book_loans.cardNo=tbl_borrower.cardNo);
+
+4.	For each book that is loaned out from the "Sharpstown" branch and whose DueDate is today, retrieve the book title, the borrower's name, and the borrower's address.
+Answer:
+Select tbl_book.title ,tbl_borrower.name,tbl_borrower.address
+from tbl_book join tbl_book_loans on tbl_book.bookId =tbl_book_loans.bookId 
+join tbl_borrower on tbl_borrower.cardNo = tbl_book_loans.cardNo
+where tbl_book_loans.branchId = ( select distinct tbl_library_branch.branchId  from tbl_library_branch where branchName = "Sharpstown" )
+and tbl_book_loans.dueDate = "06/15/2016";
+
+
+
+5.	For each library branch, retrieve the branch name and the total number of books loaned out from that branch.
+Answer:
+Select tbl_library_branch.branchName, count (tbl_book_loans.branchId) 
+from tbl_library_branch join tbl_book_loans on tbl_library_branch.branchId = tbl_book_loans.branchId
+Group by tbl_library_branch.branchName;
+
+6.	Retrieve the names, addresses, and number of books checked out for all borrowers who have more than five books checked out. 
+Answer:
+Select tbl_borrower.name,tbl_borrower.address , count (tbl_book_loans.bookId)
+from tbl_borrower join tbl_book_loans on tbl_borrower.cardNo = tbl_book_loans.cardNo
+Group by tbl_borrower.name
+having count (tbl_book_loans.bookId) >5;
+
+7.	For each book authored (or co-authored) by "Stephen King", retrieve the title and the number of copies owned by the library branch whose name is "Central"
+Answer:
+	
+Select tbl_book.title, tbl_book_copies.noOfCopies 
+from tbl_book_copies join tbl_book on tbl_book.bookId =    tbl_book_copies.bookId
+join tbl_book_authors on tbl_book_authors.bookId = tbl_book.bookId
+where tbl_book_authors.author in (Select distinct authorId from tbl_author where authorName = "Stephen King")
+and tbl_book_copies.branchId in (Select  distinct tbl_library_branch.branchId from tbl_library_branch 
+where tbl_library_branch.branchName = "Central");
+
+
+*****************************nextpart*******************************
+8.	Retrieve the names of employees in department 5 who work more than 10 hours per week on the 'ProductX' project.
+Answer:
+SELECT FNAME,MINIT,LNAME
+FROM EMPLOYEE E, PROJECT P, WORKS_ON W
+WHERE E.SSN=W.ESSN
+AND       W.PNO=P.PNUMBER
+AND       DNO=5
+AND       HOURS >10
+AND       PNAME='ProductX'; 
+
+9.	For each project, list the project name and the total hours per week (by all employees) spent on that project.
+
+SELECT P.PNAME,SUM(HOURS)
+FROM PROJECT P, WORKS_ON W
+WHERE P.PNUMBER=W.PNO
+GROUP BY P.PNAME;
+
+10.	Retrieve the names of employees who work on every project.
+
+SELECT FNAME,MINIT,LNAME
+FROM EMPLOYEE
+WHERE NOT EXISTS 
+  ( 
+   (SELECT PNUMBER 
+   FROM PROJECT) 
+   MINUS 
+   (SELECT PNO 
+   FROM WORKS_ON 
+   WHERE SSN=ESSN)
+);
+
+11.	Retrieve the names of employees who do not work on any project. 
+
+SELECT FNAME,MINIT,LNAME
+FROM EMPLOYEE
+WHERE NOT EXISTS 
+(SELECT PNO 
+   FROM WORKS_ON 
+   WHERE SSN=ESSN
+);
+
+12.	Find the names and addresses of employees who work on at least one project located in Houston but whose department has no location in Houston. 
+
+SELECT FNAME,MINIT,LNAME,ADDRESS
+FROM EMPLOYEE E, WORKS_ON W
+WHERE E.SSN=W.ESSN
+AND W.PNO IN (SELECT PNUMBER FROM PROJECT WHERE PLOCATION='Houston')
+MINUS
+SELECT FNAME,MINIT,LNAME,ADDRESS
+FROM EMPLOYEE E
+WHERE DNO NOT IN (SELECT DNUMBER FROM DEPT_LOCATIONS WHERE DLOCATION<> 'Houston')
+
+13.	List the last names of department managers who have no dependents. 
+
+SELECT LNAME
+FROM EMPLOYEE E, DEPARTMENT D
+WHERE E.SSN=D.MGRSSN
+AND NOT EXISTS (SELECT * FROM DEPENDENT WHERE MGRSSN=ESSN);
+
+14.	Find details of those employees whose salary is > the average salary for all employees. Output salary in descending order.
+
+SELECT	FNAME,MINIT,LNAME,ADDRESS 
+FROM	EMPLOYEE
+WHERE	Salary > (SELECT AVG (Salary)
+			      FROM EMPLOYEE )
+ORDER BY Salary DESC
+
+ 
+15.	Find details of those employees whose salary is > the average salary for all employees in his/her department. Output salary in ascending order.
+
+SELECT	FNAME,MINIT,LNAME,ADDRESS
+FROM    EMPLOYEE E
+WHERE   E.SALARY  > (SELECT AVERAGE(SALARY) 
+   FROM EMPLOYEE
+   WHERE DNO = E.DNO);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
